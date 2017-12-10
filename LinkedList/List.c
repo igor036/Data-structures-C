@@ -170,3 +170,15 @@ void printl(struct List* list){
 	}
 
 }
+
+void clear(struct List* list){
+
+	struct Node* node = list->first;
+
+	while(node != NULL){
+		struct Node* temp = node->next;
+		free(node);
+		node = temp;
+		list->size--;
+	}
+}

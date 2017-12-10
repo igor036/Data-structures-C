@@ -34,3 +34,4 @@ int deleteByIndex(struct List* list, int index);
 int deleteByValue(struct List* list, void* value);
 int isEmpty(struct List* list);
 void printl(struct List* list);
+void clear(struct List* list);
