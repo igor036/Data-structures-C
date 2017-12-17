@@ -100,7 +100,7 @@ struct Node* getNodeByValue(struct List* list,void* value){
 	}
 }
 
-int deleteByIndex(struct List* list, int index){
+int removeByIndex(struct List* list, int index){
 
 	if (index >= list->size || index < 0)
 		return 0;
@@ -128,7 +128,7 @@ int deleteByIndex(struct List* list, int index){
 }
 
 
-int deleteByValue(struct List* list, void* value){
+int removeByValue(struct List* list, void* value){
 
 	struct Node* node;
 
@@ -179,6 +179,7 @@ void clear(struct List* list){
 		struct Node* temp = node->next;
 		free(node);
 		node = temp;
-		list->size--;
 	}
+
+	list->size = 0;
 }

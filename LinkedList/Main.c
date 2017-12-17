@@ -52,11 +52,11 @@ int main(){
 
 
 	printf("\n%s\n","deletando por index");
-	deleteByIndex(list,3);
+	removeByIndex(list,3);
 	printl(list);
 
 	printf("\n%s\n","deletando por valor");
-	deleteByValue(list,person3);
+	removeByValue(list,person3);
 	printl(list);
 
 	return 0;
