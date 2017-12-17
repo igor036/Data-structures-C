@@ -34,7 +34,7 @@ void* pop(struct Stack* stack){
 }
 
 int isEmpity(struct Stack* stack){
-	return stack->size > 0 ? 1 : 0;
+	return stack->size == 0;
 }
 
 void clear(struct Stack* stack){

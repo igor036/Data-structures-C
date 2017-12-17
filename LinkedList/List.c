@@ -157,7 +157,7 @@ int removeByValue(struct List* list, void* value){
 
 
 int isEmpty(struct List* list){
-	return list->first == NULL ? 1 : 0;
+	return list->size == 0;
 }
 
 void printl(struct List* list){
