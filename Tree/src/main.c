@@ -13,15 +13,16 @@ int main(void) {
 	tree_insert(tree,1,1);
 	tree_insert(tree,3,3);
 
-	/*
-	printf("\n%s\n","Arvore");
-	tree_print(tree);*/
 
-	printf("\n%s\n","Arvore");
+	printf("first: %d\n", tree_first(tree));
+	printf("last: %d\n", tree_last(tree));
 
-	tree_remove(tree,2);
+	printf("remove first: %d\n", tree_remove_first(tree));
+	printf("remove last: %d\n", tree_remove_last(tree));
+
+	//printf("remove 2: %d\n",tree_remove(tree,2));
+
 	tree_print(tree);
-
 
 	return 2;
 }

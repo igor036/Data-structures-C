@@ -3,14 +3,145 @@
 
 /*aux methods*/
 int height_node(struct node* node){
-	if (node == NULL)
+	if (node == 0x0)
 		return 0;
 	return node->height;
 }
+
 int balancing_factor(struct node* node){
 	return height_node(node->left) - height_node(node->right);
 }
 
+
+
+
+//static functions
+
+/*
+ * used for find the first
+ * node in the tree
+ */
+static struct node* tree_frist_node(struct tree* tree) {
+
+	struct node* node = tree->root;
+
+	while(node->left != 0x0)
+		node = node->left;
+
+	return node;
+}
+
+
+
+/*
+ * used for find the last
+ * node in the tree
+ */
+static struct node* tree_last_node(struct tree* tree) {
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	struct node* node = tree->root;
+
+	while(node->right != 0x0)
+		node = node->right;
+
+	return node;
+}
+
+
+
+/*
+ * used for find
+ * a node by key
+ */
+static struct node* tree_get_node(struct tree* tree,int key){
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	struct node* node = tree->root;
+
+	while(node != 0x0 && node->key != key)
+		node = key > node->key ? node->right : node->left;
+
+	return node;
+}
+
+
+/*
+ * used for remove one node
+ * of tree
+ */
+static void* tree_remove_node(struct node* node){
+
+	if (node == 0x0)
+		return 0x0;
+
+	struct node* father;
+	struct node* aux;
+	void* value = node-> value;
+
+	father = node->father;
+
+	//the tree have only one element!
+	if (node->left == 0x0 && node->right == 0x0) {
+
+		if (father->left == node)
+			father->left = 0x0;
+		else
+			father->right = 0x0;
+
+		free(node);
+
+	}
+
+	//the node have only one child
+	else if (node->left == 0x0 || node->right == 0x0){
+
+		//left
+		if (node->left != 0x0 && node->right == 0x0)
+				aux = node->left;
+
+		//right
+		else if (node->left == 0x0 && node->right != 0x0)
+			aux = node->right;
+
+
+		if (father->left == node)
+			father->left = aux;
+		else
+			father->right = aux;
+
+		aux->father = father;
+			free(node);
+
+	}
+
+	//the node have two child
+	else {
+
+		aux = node->right;
+
+		while (aux->left != 0x0)
+			aux = aux->left;
+
+		node->key = aux->key;
+		node->value = aux->value;
+		free(aux);
+
+		if (aux->father->left == aux)
+			aux->father->left = 0x0;
+		else
+			aux->father->right = 0x0;
+	}
+
+	return value;
+}
+
+
+//end static functions
 
 struct tree* create_tree(){
 	return (struct tree*)malloc(sizeof(struct tree));
@@ -27,24 +158,24 @@ void tree_insert(struct tree* tree, void* value, int key) {
 	node->key = key;
 	node->value = value;
 
-	if (tree->root == NULL)
+	if (tree->root == 0x0)
 		tree->root = node;
 	else {
 
 		struct node* aux = tree->root;
 
-		while (aux != NULL) {
+		while (aux != 0x0) {
 
 			if (aux->key == key) {
 				aux->value = value;
 				break;
 			}
 
-			if (aux->key > key && aux->left == NULL) {
+			if (aux->key > key && aux->left == 0x0) {
 				aux->left = node;
 				node->father =  aux;
 				break;
-			} else if (aux->key < key && aux->right == NULL) {
+			} else if (aux->key < key && aux->right == 0x0) {
 				aux->right = node;
 				node->father =  aux;
 				break;
@@ -57,85 +188,14 @@ void tree_insert(struct tree* tree, void* value, int key) {
 	}
 }
 
-struct node* get_node(struct tree* tree,int key){
+void* tree_get(struct tree* tree,int key){
 
-	struct node* node = tree->root;
-
-	while(node != NULL && node->key != key)
-		node = key > node->key ? node->right : node->left;
-
-	return node;
+	struct node* node = tree_get_node(tree,key);
+	return node == 0x0 ? 0x0 : node->value;
 }
 
-
-void* get(struct tree* tree,int key){
-
-	struct node* node = get_node(tree,key);
-	return node == NULL ? NULL : node->value;
-}
-
-void tree_remove(struct tree* tree, int key){
-
-	struct node* node = get_node(tree,key);
-	struct node* father;
-	struct node* aux;
-
-	if (node != NULL) {
-
-		father = node->father;
-
-		//the tree have only one element!
-		if (node->left == NULL && node->right == NULL) {
-
-			if (father->left == node)
-				father->left = NULL;
-			else
-				father->right = NULL;
-
-			free(node);
-
-		}
-
-		//the node have only one child
-		else if (node->left == NULL || node->right == NULL){
-
-			//left
-			if (node->left != NULL && node->right == NULL)
-				aux = node->left;
-
-			//right
-			else if (node->left == NULL && node->right != NULL)
-				aux = node->right;
-
-
-			if (father->left == node)
-				father->left = aux;
-			else
-				father->right = aux;
-
-			aux->father = father;
-			free(node);
-
-		}
-
-		//the node have two child
-		else {
-
-			aux = node->right;
-
-			while (aux->left != NULL)
-				aux = aux->left;
-
-			node->key = aux->key;
-			node->value = aux->value;
-			free(aux);
-
-			if (aux->father->left == aux)
-				aux->father->left = NULL;
-			else
-				aux->father->right = NULL;
-		}
-	}
+void* tree_remove(struct tree* tree, int key){
+	return tree_remove_node(tree_get_node(tree,key));
 }
 
 void tree_print(struct tree* tree ){
@@ -149,9 +209,9 @@ void tree_print(struct tree* tree ){
 
 		node = getFirst(queue);
 
-		if (node->left != NULL)
+		if (node->left != 0x0)
 			add(queue,node->left);
-		if (node->right != NULL)
+		if (node->right != 0x0)
 			add(queue,node->right);
 
 		printf("%d\n",node->key);
@@ -159,3 +219,38 @@ void tree_print(struct tree* tree ){
 
 	}
 }
+
+void* tree_first(struct tree* tree) {
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	return tree_frist_node(tree)->value;
+}
+
+
+void* tree_remove_first(struct tree* tree){
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	return tree_remove_node(tree_frist_node(tree));
+
+}
+
+void* tree_last(struct tree* tree) {
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	return tree_last_node(tree)->value;
+}
+
+void* tree_remove_last(struct tree* tree) {
+
+	if (tree->root == 0x0)
+		return 0x0;
+
+	return tree_remove_node(tree_last_node(tree));
+}
+
