@@ -1,20 +1,6 @@
 #include "tree.h"
 
 
-/*aux methods*/
-int height_node(struct node* node){
-	if (node == 0x0)
-		return 0;
-	return node->height;
-}
-
-int balancing_factor(struct node* node){
-	return height_node(node->left) - height_node(node->right);
-}
-
-
-
-
 //static functions
 
 /*
@@ -141,6 +127,69 @@ static void* tree_remove_node(struct node* node){
 }
 
 
+static int tree_balancing_node(struct node* node){
+
+	if (!node)
+		return 0;
+
+	int left = node->left ? node->left->height+1 : 0;
+	int right = node->right ? node->right->height+1 : 0;
+
+	return left - right;
+}
+
+static void tree_left_rotation(struct node* node,struct tree* tree){
+
+	struct node* rigth = node->right;
+
+	node->right = rigth->left;
+
+	if (rigth->left)
+		rigth->left->father = node;
+
+	rigth->left = node;
+	rigth->father = node->father;
+	node->father = rigth;
+
+
+	if (tree->root->key == node->key) {
+		tree->root = rigth;
+	}
+
+	rigth->height++;
+
+	int left = node->left ? node->left->height : 0;
+	int right = node->right ? node->right->height : 0;
+
+	node->height = left > right ? left : right;
+
+	node = rigth;
+}
+
+
+static void tree_update_height(struct node* node,struct tree* tree ,int level) {
+
+	struct node* previous = node;
+
+
+	while(node) {
+
+		node->height = level++;
+
+		//left rotations
+		if (tree_balancing_node(node) <= -2) {
+
+			//single
+			if (tree_balancing_node(node->right) < 0)
+				tree_left_rotation(node,tree);
+
+		}
+
+		previous = node;
+		node = node->father;
+
+	}
+}
 //end static functions
 
 struct tree* create_tree(){
@@ -185,6 +234,7 @@ void tree_insert(struct tree* tree, void* value, int key) {
 		}
 
 		tree->size++;
+		tree_update_height(node,tree,0);
 	}
 }
 
@@ -214,7 +264,23 @@ void tree_print(struct tree* tree ){
 		if (node->right != 0x0)
 			add(queue,node->right);
 
-		printf("%d\n",node->key);
+		printf("%s ","{");
+
+		printf("key: %d  - ",node->key);
+
+		if (node->father) {
+
+			if (node->father->left)
+				printf("child left: %d ",node->father->key);
+			else
+				printf("child rigth: %d ",node->father->key);
+		} else
+			printf("root node - ");
+
+		printf("height: %d ",node->height);
+		printf(" bf: %d ",tree_balancing_node(node));
+
+		printf("%s\n","}");
 
 
 	}
@@ -253,4 +319,3 @@ void* tree_remove_last(struct tree* tree) {
 
 	return tree_remove_node(tree_last_node(tree));
 }
-

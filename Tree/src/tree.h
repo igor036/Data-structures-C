@@ -12,7 +12,9 @@
 #include "queue/queue.h"
 
 struct node {
-	int height,key;
+
+	int key,height;
+
 	void* value;
 	struct node* father;
 	struct node* left;
