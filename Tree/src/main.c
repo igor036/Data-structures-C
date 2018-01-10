@@ -12,7 +12,11 @@ int main(void) {
 	tree_insert(tree,10,10);
 	tree_insert(tree,8,8);
 	tree_insert(tree,67,67);
-
+	tree_insert(tree,59,59);
+	tree_insert(tree,9,9);
+	tree_insert(tree,13,13);
+	tree_insert(tree,20,20);
+	tree_insert(tree,14,14);
 	tree_print(tree);
 
 	return 2;

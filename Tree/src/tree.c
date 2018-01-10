@@ -155,8 +155,12 @@ static void tree_left_rotation(struct node* node,struct tree* tree) {
 
 	if (tree->root->key == node->key)
 		tree->root = rigth;
-	else
-		rigth->father->right = rigth;
+	else {
+		if (rigth->father->left && rigth->father->left->key == node->key)
+			rigth->father->left = rigth;
+		else
+			rigth->father->right= rigth;
+	}
 
 	rigth->height++;
 
@@ -180,10 +184,14 @@ static void tree_right_rotation(struct node* node,struct tree* tree) {
 	left->father = node->father;
 	node->father = left;
 
-	if (tree->root->key == node->key)
+	if (tree->root->key == node->key){
 		tree->root = left;
-	else
-		left->father->left = left;
+	} else {
+		if (left->father->left && left->father->left->key == node->key)
+			left->father->left = left;
+		else
+			left->father->right= left;
+	}
 
 	left->height++;
 
@@ -191,6 +199,16 @@ static void tree_right_rotation(struct node* node,struct tree* tree) {
 	int right_level = node->right ? node->right->height+1 : 0;
 
 	node->height = left_level > right_level ? left_level : right_level;
+}
+
+static void tree_double_rotation_left(struct node* node,struct tree* tree) {
+	tree_right_rotation(node->right,tree);
+	tree_left_rotation(node,tree);
+}
+
+static void tree_double_rotation_right(struct node* node,struct tree* tree) {
+	tree_left_rotation(node->left,tree);
+	tree_right_rotation(node,tree);
 }
 
 static void tree_update_height(struct node* node,struct tree* tree ) {
@@ -208,7 +226,8 @@ static void tree_update_height(struct node* node,struct tree* tree ) {
 			//single
 			if (tree_balancing_node(node->right) < 0)
 				tree_left_rotation(node,tree);
-
+			else
+				tree_double_rotation_left(node,tree);
 
 		//right rotation
 		} else if (tree_balancing_node(node) >= 2) {
@@ -216,6 +235,9 @@ static void tree_update_height(struct node* node,struct tree* tree ) {
 			//single
 			if(tree_balancing_node(node->left) > 0)
 				tree_right_rotation(node,tree);
+			else
+				tree_double_rotation_right(node,tree);
+
 		}
 
 		//new level
@@ -305,7 +327,7 @@ void tree_print(struct tree* tree ){
 
 		if (node->father) {
 
-			if (node->father->left->key == node->key)
+			if (node->father->left && node->father->left->key == node->key)
 				printf("child left: %d ",node->father->key);
 			else
 				printf("child rigth: %d ",node->father->key);
