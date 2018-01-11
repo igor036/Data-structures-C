@@ -1,6 +1,5 @@
 #include "tree.h"
 
-
 //static functions
 
 /*
@@ -55,78 +54,6 @@ static struct node* tree_get_node(struct tree* tree,int key){
 	return node;
 }
 
-
-/*
- * used for remove one node
- * of tree
- */
-static void* tree_remove_node(struct node* node){
-
-	if (!node)
-		return 0x0;
-
-	struct node* father;
-	struct node* aux;
-	void* value = node-> value;
-
-	father = node->father;
-
-	//the tree have only one element!
-	if (!node->left && !node->right) {
-
-		if (father->left == node)
-			father->left = 0x0;
-		else
-			father->right = 0x0;
-
-		free(node);
-
-	}
-
-	//the node have only one child
-	else if (!node->left || !node->right){
-
-		//left
-		if (node->left && !node->right)
-				aux = node->left;
-
-		//right
-		else if (!node->left && node->right)
-			aux = node->right;
-
-
-		if (father->left == node)
-			father->left = aux;
-		else
-			father->right = aux;
-
-		aux->father = father;
-			free(node);
-
-	}
-
-	//the node have two child
-	else {
-
-		aux = node->right;
-
-		while (aux->left)
-			aux = aux->left;
-
-		node->key = aux->key;
-		node->value = aux->value;
-		free(aux);
-
-		if (aux->father->left == aux)
-			aux->father->left = 0x0;
-		else
-			aux->father->right = 0x0;
-	}
-
-	return value;
-}
-
-
 static int tree_balancing_node(struct node* node){
 
 	if (!node)
@@ -137,6 +64,16 @@ static int tree_balancing_node(struct node* node){
 
 	return left - right;
 }
+
+static void tree_set_height_node(struct node* node){
+
+	int left_level = node->left ? node->left->height+1 : 0;
+	int right_level = node->right ? node->right->height+1 : 0;
+
+	node->height = left_level > right_level ? left_level : right_level;
+
+}
+
 
 static void tree_left_rotation(struct node* node,struct tree* tree) {
 
@@ -162,14 +99,8 @@ static void tree_left_rotation(struct node* node,struct tree* tree) {
 			rigth->father->right= rigth;
 	}
 
-	rigth->height++;
-
-	int left_level = node->left ? node->left->height+1 : 0;
-	int right_level = node->right ? node->right->height+1 : 0;
-
-	node->height = left_level > right_level ? left_level : right_level;
+	tree_set_height_node(node);
 }
-
 
 static void tree_right_rotation(struct node* node,struct tree* tree) {
 
@@ -193,12 +124,7 @@ static void tree_right_rotation(struct node* node,struct tree* tree) {
 			left->father->right= left;
 	}
 
-	left->height++;
-
-	int left_level = node->left ? node->left->height+1 : 0;
-	int right_level = node->right ? node->right->height+1 : 0;
-
-	node->height = left_level > right_level ? left_level : right_level;
+	tree_set_height_node(node);
 }
 
 static void tree_double_rotation_left(struct node* node,struct tree* tree) {
@@ -211,42 +137,133 @@ static void tree_double_rotation_right(struct node* node,struct tree* tree) {
 	tree_right_rotation(node,tree);
 }
 
-static void tree_update_height(struct node* node,struct tree* tree ) {
+static void tree_update_height(struct node* node,struct tree* tree, type_rotation tr ) {
 
-	struct node* previous = node;
+	tree_set_height_node(node);
+
 	int level = node->height;
 
 	while(node) {
+
 
 		node->height = level++;
 
 		//left rotations
 		if (tree_balancing_node(node) <= -2) {
 
-			//single
-			if (tree_balancing_node(node->right) < 0)
+			if (tr == REMOVE)
 				tree_left_rotation(node,tree);
-			else
-				tree_double_rotation_left(node,tree);
+			else {
+
+				if (tree_balancing_node(node->right) < 0)
+					tree_left_rotation(node,tree);
+				else
+					tree_double_rotation_left(node,tree);
+			}
 
 		//right rotation
 		} else if (tree_balancing_node(node) >= 2) {
 
-			//single
-			if(tree_balancing_node(node->left) > 0)
+			if (tr == REMOVE)
 				tree_right_rotation(node,tree);
-			else
-				tree_double_rotation_right(node,tree);
+			else {
 
+				if(tree_balancing_node(node->left) > 0)
+					tree_right_rotation(node,tree);
+				else
+					tree_double_rotation_right(node,tree);
+			}
 		}
 
 		//new level
 		level = node->height+1;
-		previous = node;
 		node = node->father;
 
 	}
 }
+
+/*
+ * used for remove one node
+ * of tree
+ */
+static void* tree_remove_node(struct node* node,struct tree* tree) {
+
+	if (!node)
+		return 0x0;
+
+	struct node* father;
+	struct node* aux;
+	void* value = node-> value;
+
+	father = node->father;
+
+	//is leaf!
+	if (!node->left && !node->right) {
+
+		if (father->left == node)
+			father->left = 0x0;
+		else
+			father->right = 0x0;
+
+		free(node);
+		tree_update_height(father,tree,REMOVE);
+	}
+
+	//the node have only one child
+	else if (!node->left || !node->right){
+
+		//left
+		if (node->left && !node->right)
+			aux = node->left;
+
+		//right
+		else if (!node->left && node->right)
+			aux = node->right;
+
+		//node is root
+		if (!node->father)
+			tree->root=aux;
+		else if (father->left == node)
+			father->left = aux;
+		else
+			father->right = aux;
+
+		aux->father = father;
+		free(node);
+
+		tree_update_height(aux,tree,REMOVE);
+
+	}
+
+	//the node have two child
+	else {
+
+		aux = node->right;
+
+		while (aux->left)
+			aux = aux->left;
+
+		struct node* right = aux->right;
+
+		node->key = aux->key;
+		node->value = aux->value;
+
+
+		right->father = aux->father;
+		aux->father->left = right;
+
+		node->height--;
+
+		tree_update_height(right,tree,REMOVE);
+
+		free(aux);
+
+	}
+
+	tree->size--;
+	return value;
+}
+
 //end static functions
 
 struct tree* create_tree(){
@@ -291,7 +308,7 @@ void tree_insert(struct tree* tree, void* value, int key) {
 		}
 
 		tree->size++;
-		tree_update_height(node,tree);
+		tree_update_height(node,tree,INSERT);
 	}
 }
 
@@ -302,7 +319,7 @@ void* tree_get(struct tree* tree,int key){
 }
 
 void* tree_remove(struct tree* tree, int key){
-	return tree_remove_node(tree_get_node(tree,key));
+	return tree_remove_node(tree_get_node(tree,key),tree);
 }
 
 void tree_print(struct tree* tree ){
@@ -357,7 +374,7 @@ void* tree_remove_first(struct tree* tree){
 	if (!tree->root)
 		return 0x0;
 
-	return tree_remove_node(tree_frist_node(tree));
+	return tree_remove_node(tree_frist_node(tree),tree);
 
 }
 
@@ -374,5 +391,5 @@ void* tree_remove_last(struct tree* tree) {
 	if (!tree->root)
 		return 0x0;
 
-	return tree_remove_node(tree_last_node(tree));
+	return tree_remove_node(tree_last_node(tree),tree);
 }

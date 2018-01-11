@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include "queue/queue.h"
 
+typedef enum {
+	INSERT ,REMOVE
+} type_rotation;
+
 struct node {
 
 	int key,height;
